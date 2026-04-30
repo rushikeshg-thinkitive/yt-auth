@@ -32,7 +32,7 @@ export async function register(req, res) {
   });
 
   const token = jwt.sign({ id: user._id }, config.JWT_SECRET, {
-    expiresIn: "15min",
+    expiresIn: "30d",
   });
 
   res.status(201).json({
@@ -42,5 +42,29 @@ export async function register(req, res) {
       email: user.email,
     },
     token,
+  });
+}
+
+export async function getMe(req, res) {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const decoded = jwt.verify(token, config.JWT_SECRET);
+
+  const user = await userModel.findById(decoded.id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.status(200).json({
+    message: "User retrieved successfully",
+    user: {
+      username: user.username,
+      email: user.email,
+    },
   });
 }
